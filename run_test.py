@@ -50,7 +50,5 @@ if __name__ == "__main__":
             index_path = f"new_train_valid_index_json/{description}.json"
             gnn_model = os.path.join("./save_model", f"gnn_{description}", "gnn_model_train.ckpt")
 
-
-
             run_func(
                 description, ppi_path, pseq_path, vec_path, index_path, gnn_model, test_all)

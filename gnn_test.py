@@ -157,6 +157,11 @@ def main():
     if args.test_all:
         print("---------------- valid-test-all result --------------------")
         f1 = test(model, graph, graph.val_mask, device)
+
+        dataset, method, seed = args.description.split('_')
+        with open(f'./save_test_results/all_{dataset}_{method}', 'a') as f:
+            f.write(str(f1))
+            f.write('\n')
     else:
         print("---------------- valid-test-all result --------------------")
         f1 = test(model, graph, graph.val_mask, device)
@@ -176,6 +181,10 @@ def main():
         else:
             f13 = None
 
+        dataset, method, seed = args.description.split('_')
+        with open(f'./save_test_results/{dataset}_{method}', 'a') as f:
+            f.write(", ".join([str(f1), str(f11), str(f12), str(f13)]))
+            f.write('\n')
 
 
 if __name__ == "__main__":
