@@ -72,6 +72,8 @@ def test(model, graph, test_mask, device):
 
     print("Recall: {}, Precision: {}, F1: {}".format(metrics.Recall, metrics.Precision, metrics.F1))
 
+    return metrics.F1
+
 def main():
 
     args = parser.parse_args()
@@ -110,7 +112,13 @@ def main():
 
     graph.to(device)
     
-    test(model, graph, graph.val_mask, device)
+    f1 = test(model, graph, graph.val_mask, device)
+
+    dataset, method, seed = args.description.split('_')
+    with open(f'./save_test_results/generalize_{dataset}_{method}', 'a') as f:
+        f.write(str(f1))
+        f.write('\n')
+
 
 if __name__ == "__main__":
     main()

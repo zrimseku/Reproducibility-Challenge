@@ -17,8 +17,9 @@ def run_func(description, ppi_path, pseq_path, vec_path,
 
 if __name__ == "__main__":
 
+    seeds = [0, 42, 100, 600, 2000]
     for split_mode in ["bfs", "dfs", "random"]:
-        for seed in [0, 42, 100, 600, 2000]:
+        for seed in seeds:
 
             # set for training on different datasets
             dataset = "SSH27k"  # select between SSH27k, SSH148k and STRING

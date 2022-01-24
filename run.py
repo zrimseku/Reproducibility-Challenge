@@ -26,16 +26,18 @@ def run_func(description, ppi_path, pseq_path, vec_path,
 
 if __name__ == "__main__":
 
+    seeds = [0, 42, 100, 600, 2000]
+
     for split_mode in ["bfs", "dfs", "random"]:
 
         # set for training on different datasets
-        dataset = "SSH27"             # select between SSH27k, SSH148k and STRING
+        dataset = "SSH27k"             # select between SSH27k, SSH148k and STRING
 
         # set to False if you already have split data
         split_new = True
 
         # PPI network graph construction method, True: GCT, False: GCA (False is default except for table 5 experiments)
-        graph_only_train = False
+        graph_only_train = True
 
         # hyperparameters as described in the paper
         use_lr_scheduler = True
@@ -60,11 +62,11 @@ if __name__ == "__main__":
             vec_path = "./data/vec5_CTC.txt"
 
         else:
-            ValueError('Not a valid dataset!')
+            raise ValueError('Not a valid dataset!')
 
-        for seed in [0, 42, 100, 600, 2000]:
-            description = f"{dataset}_{split_mode}_{seed}"
-            train_valid_index_path = f"new_train_valid_index_json/{description}.json"
+        for seed in seeds:
+            description = f"GCT_{dataset}_{split_mode}_{seed}"
+            train_valid_index_path = f"new_train_valid_index_json/GCT_{description}.json"
 
             print('____________________________________________________________________________')
             print(f'____________________________{description}________________________________')
