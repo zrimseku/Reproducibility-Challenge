@@ -70,6 +70,9 @@ def test(model, graph, test_mask, device):
 
     print("Recall: {}, Precision: {}, F1: {}".format(metrics.Recall, metrics.Precision, metrics.F1))
 
+    return metrics.F1
+
+
 def main():
 
     args = parser.parse_args()
@@ -143,7 +146,8 @@ def main():
     graph.test2_mask = test2_mask
     graph.test3_mask = test3_mask
 
-    device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
+    # device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     model = GIN_Net2(in_len=2000, in_feature=13, gin_in_feature=256, num_layers=1, pool_size=3, cnn_hidden=1).to(device)
 
     model.load_state_dict(torch.load(args.gnn_model)['state_dict'])
@@ -152,17 +156,27 @@ def main():
 
     if args.test_all:
         print("---------------- valid-test-all result --------------------")
-        test(model, graph, graph.val_mask, device)
+        f1 = test(model, graph, graph.val_mask, device)
     else:
+        print("---------------- valid-test-all result --------------------")
+        f1 = test(model, graph, graph.val_mask, device)
         print("---------------- valid-test1 result --------------------")
         if len(graph.test1_mask) > 0:
-            test(model, graph, graph.test1_mask, device)
+            f11 = test(model, graph, graph.test1_mask, device)
+        else:
+            f11 = None
         print("---------------- valid-test2 result --------------------")
         if len(graph.test2_mask) > 0:
-            test(model, graph, graph.test2_mask, device)
+            f12 = test(model, graph, graph.test2_mask, device)
+        else:
+            f12 = None
         print("---------------- valid-test3 result --------------------")
         if len(graph.test3_mask) > 0:
-            test(model, graph, graph.test3_mask, device)
+            f13 = test(model, graph, graph.test3_mask, device)
+        else:
+            f13 = None
+
+
 
 if __name__ == "__main__":
     main()

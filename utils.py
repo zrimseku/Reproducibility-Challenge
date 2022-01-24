@@ -90,17 +90,19 @@ class UnionFindSet(object):
 
 def get_bfs_sub_graph(ppi_list, node_num, node_to_edge_index, sub_graph_size):
 
-    candiate_node = []
+    candidate_node = []
     selected_edge_index = []
     selected_node = []
 
     random_node = random.randint(0, node_num - 1)
     while len(node_to_edge_index[random_node]) > 5:
         random_node = random.randint(0, node_num - 1)
-    candiate_node.append(random_node)
+    candidate_node.append(random_node)
+
+    print(f'First node is {candidate_node[0]}')
 
     while len(selected_edge_index) < sub_graph_size:
-        cur_node = candiate_node.pop(0)
+        cur_node = candidate_node.pop(0)
         selected_node.append(cur_node)
         for edge_index in node_to_edge_index[cur_node]:
 
@@ -113,12 +115,12 @@ def get_bfs_sub_graph(ppi_list, node_num, node_to_edge_index, sub_graph_size):
                 else:
                     end_node = ppi_list[edge_index][0]
 
-                if end_node not in selected_node and end_node not in candiate_node:
-                    candiate_node.append(end_node)
+                if end_node not in selected_node and end_node not in candidate_node:
+                    candidate_node.append(end_node)
             else:
                 continue
-        # print(len(selected_edge_index), len(candiate_node))
-    node_list = candiate_node + selected_node
+        # print(len(selected_edge_index), len(candidate_node))
+    node_list = candidate_node + selected_node
     # print(len(node_list), len(selected_edge_index))
     return selected_edge_index
 
@@ -132,6 +134,7 @@ def get_dfs_sub_graph(ppi_list, node_num, node_to_edge_index, sub_graph_size):
     while len(node_to_edge_index[random_node]) > 5:
         random_node = random.randint(0, node_num - 1)
     stack.append(random_node)
+    print(f'First node is {stack[0]}')
 
     while len(selected_edge_index) < sub_graph_size:
         # print(len(selected_edge_index), len(stack), len(selected_node))

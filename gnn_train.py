@@ -7,15 +7,13 @@ import argparse
 import torch
 import torch.nn as nn
 
+from tqdm import tqdm
 from gnn_data import GNN_DATA
 from gnn_model import GIN_Net2
 from utils import Metrictor_PPI, print_file
 
 from tensorboardX import SummaryWriter
 
-np.random.seed(1)
-torch.manual_seed(1)
-torch.cuda.manual_seed(1)
 
 def boolean_string(s):
     if s not in {'False', 'True'}:
@@ -48,6 +46,9 @@ parser.add_argument('--batch_size', default=None, type=int,
                     help="gnn train batch size, edge batch size")
 parser.add_argument('--epochs', default=None, type=int,
                     help='train epoch number')
+parser.add_argument('--seed', default=1, type=int,
+                    help='random seed')
+
 
 def train(model, graph, ppi_list, loss_fn, optimizer, device,
         result_file_path, summary_writer, save_path,
@@ -74,7 +75,7 @@ def train(model, graph, ppi_list, loss_fn, optimizer, device,
         random.shuffle(graph.train_mask)
         random.shuffle(graph.train_mask_got)
 
-        for step in range(steps):
+        for step in tqdm(range(steps)):
             if step == steps-1:
                 if got:
                     train_edge_id = graph.train_mask_got[step*batch_size:]
@@ -119,8 +120,8 @@ def train(model, graph, ppi_list, loss_fn, optimizer, device,
             summary_writer.add_scalar('train/F1', metrics.F1, global_step)
 
             global_step += 1
-            print_file("epoch: {}, step: {}, Train: label_loss: {}, precision: {}, recall: {}, f1: {}"
-                        .format(epoch, step, loss.item(), metrics.Precision, metrics.Recall, metrics.F1))
+            # print_file("epoch: {}, step: {}, Train: label_loss: {}, precision: {}, recall: {}, f1: {}"
+            #             .format(epoch, step, loss.item(), metrics.Precision, metrics.Recall, metrics.F1))
         
         torch.save({'epoch': epoch,
                     'state_dict': model.state_dict()},
@@ -191,6 +192,10 @@ def train(model, graph, ppi_list, loss_fn, optimizer, device,
 def main():
     args = parser.parse_args()
 
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+    torch.cuda.manual_seed(args.seed)
+
     ppi_data = GNN_DATA(ppi_path=args.ppi_path)
 
     print("use_get_feature_origin")
@@ -237,8 +242,8 @@ def main():
     if not os.path.exists(args.save_path):
         os.mkdir(args.save_path)
 
-    time_stamp = time.strftime("%Y-%m-%d %H:%M:%S")
-    save_path = os.path.join(args.save_path, "gnn_{}_{}".format(args.description, time_stamp))
+    # time_stamp = time.strftime("%Y-%m-%d__%H-%M-%S")
+    save_path = os.path.join(args.save_path, "gnn_{}".format(args.description))
     result_file_path = os.path.join(save_path, "valid_results.txt")
     config_path = os.path.join(save_path, "config.txt")
     os.mkdir(save_path)
@@ -252,6 +257,8 @@ def main():
         f.write("train gnn, train_num: {}, valid_num: {}".format(len(graph.train_mask), len(graph.val_mask)))
 
     summary_writer = SummaryWriter(save_path)
+
+    print('Method for graph building: {}'.format(['GCA', 'GCT'][int(args.graph_only_train)]))
 
     train(model, graph, ppi_list, loss_fn, optimizer, device,
         result_file_path, summary_writer, save_path,

@@ -64,6 +64,11 @@ class GNN_DATA:
             if temp_data not in self.ppi_dict.keys():
                 self.ppi_dict[temp_data] = ppi_name
                 temp_label = [0, 0, 0, 0, 0, 0, 0]
+                # if len(line) >= 3:
+#                    print(line)
+#                print(line[label_index])
+#                print('__________')
+#                test = line[label_index]
                 temp_label[class_map[line[label_index]]] = 1
                 self.ppi_label_list.append(temp_label)
                 ppi_name += 1
@@ -241,7 +246,7 @@ class GNN_DATA:
                     f.close()
 
             elif mode == 'bfs' or mode == 'dfs':
-                print("use {} methed split train and valid dataset".format(mode))
+                print("use {} method split train and valid dataset".format(mode))
                 node_to_edge_index = {}
                 edge_num = int(self.edge_num // 2)
                 for i in range(edge_num):

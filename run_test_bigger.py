@@ -22,8 +22,11 @@ if __name__ == "__main__":
     pseq_path = "./data/protein.SHS148k.sequences.dictionary.tsv"
     vec_path = "./data/vec5_CTC.txt"
 
-    index_path = "./train_valid_index_json/shs148k.bfs.fold1.json"
-    gnn_model = "./save_model/gnn_string_bfs/gnn_model_train.ckpt"
+    # index_path = "./train_valid_index_json/shs148k.bfs.fold1.json"
+    # gnn_model = "./save_model/gnn_string_bfs/gnn_model_train.ckpt"
+
+    index_path = "new_train_valid_index_json/27k.bfs.fold1.json"
+    gnn_model = "./save_model/gnn_test_27k_bfs_2022-01-22__10-41-32/gnn_model_valid_best.ckpt"
 
     bigger_ppi_path = "./data/9606.protein.actions.all_connected.txt"
     bigger_pseq_path = "./data/protein.STRING_all_connected.sequences.dictionary.tsv"
