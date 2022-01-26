@@ -31,13 +31,13 @@ if __name__ == "__main__":
     for split_mode in ["bfs", "dfs", "random"]:
 
         # set for training on different datasets
-        dataset = "SSH27k"             # select between SSH27k, SSH148k and STRING
+        dataset = "SHS27k"             # select between SHS27k, SHS148k and STRING
 
         # set to False if you already have split data
         split_new = True
 
         # PPI network graph construction method, True: GCT, False: GCA (False is default except for table 5 experiments)
-        graph_only_train = True
+        graph_only_train = False
 
         # hyperparameters as described in the paper
         use_lr_scheduler = True
@@ -46,12 +46,12 @@ if __name__ == "__main__":
 
         save_path = "./save_model/"
 
-        if dataset == 'SSH27k':
+        if dataset == 'SHS27k':
             ppi_path = "./data/protein.actions.SHS27k.STRING.txt"
             pseq_path = "./data/protein.SHS27k.sequences.dictionary.tsv"
             vec_path = "./data/vec5_CTC.txt"
 
-        elif dataset == 'SSH148k':
+        elif dataset == 'SHS148k':
             ppi_path = "./data/protein.actions.SHS148k.STRING.txt"
             pseq_path = "./data/protein.SHS148k.sequences.dictionary.tsv"
             vec_path = "./data/vec5_CTC.txt"
