@@ -64,11 +64,6 @@ class GNN_DATA:
             if temp_data not in self.ppi_dict.keys():
                 self.ppi_dict[temp_data] = ppi_name
                 temp_label = [0, 0, 0, 0, 0, 0, 0]
-                # if len(line) >= 3:
-#                    print(line)
-#                print(line[label_index])
-#                print('__________')
-#                test = line[label_index]
                 temp_label[class_map[line[label_index]]] = 1
                 self.ppi_label_list.append(temp_label)
                 ppi_name += 1
