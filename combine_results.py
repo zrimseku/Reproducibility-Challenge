@@ -57,3 +57,19 @@ if __name__ == '__main__':
     gen_combined = gen_means.round(2).astype(str) + ' pm ' + gen_stds.round(2).astype(str)
     print(gen_combined.to_latex())
 
+    # result 3
+    gct_bfs_27 = pd.read_csv('save_test_results/all_GCT_SHS27k_bfs', sep=',', header=None)
+    gct_dfs_27 = pd.read_csv('save_test_results/all_GCT_SHS27k_dfs', sep=',', header=None)
+    gct_bfs_148 = pd.read_csv('save_test_results/all_GCT_SHS148k_bfs', sep=',', header=None)
+    gct_dfs_148 = pd.read_csv('save_test_results/all_GCT_SHS148k_dfs', sep=',', header=None)
+
+    bfs = [str(df.mean().round(2)[0]) + ' pm ' + str(df.std().round(2)[0]) for df in [gct_bfs_27, gct_bfs_148]]
+    dfs = [str(df.mean().round(2)[0]) + ' pm ' + str(df.std().round(2)[0]) for df in [gct_dfs_27, gct_dfs_148]]
+
+    cols = ['SHS27k', 'SHS148k']
+    res3 = pd.DataFrame(columns=cols)
+    rows = [combined.loc['bfs', 'X_all'].values, bfs, combined.loc['dfs', 'X_all'].values, dfs]
+    for row in rows:
+        res3 = res3.append({k: v for k, v in zip(cols, row)}, ignore_index=True)
+
+    print(res3.to_latex())
