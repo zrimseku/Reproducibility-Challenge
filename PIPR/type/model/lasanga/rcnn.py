@@ -9,8 +9,9 @@ import tensorflow as tf
 import numpy as np
 from tqdm import tqdm
 from collections import defaultdict
+import time
 
-# os.environ["CUDA_VISIBLE_DEVICES"]="1"
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
 from tensorflow.python.keras.models import Model
 from tensorflow.python.keras.layers import Dense, Bidirectional, concatenate, multiply, Conv1D, MaxPooling1D, \
@@ -18,11 +19,11 @@ from tensorflow.python.keras.layers import Dense, Bidirectional, concatenate, mu
 from tensorflow.python.keras.optimizers import Adam,  RMSprop
 from tensorflow import keras
 
-from PIPR.embeddings.seq2tensor import s2t
+from seq2tensor import s2t
 from utils import Metrictor_PPI
 
 
-def get_session(gpu_fraction=0.75):
+def get_session(gpu_fraction=0.9):
     '''Assume that you have 6GB of GPU memory and want to allocate ~2GB'''
 
     num_threads = os.environ.get('OMP_NUM_THREADS')
@@ -141,7 +142,7 @@ def build_model(dim, hidden_dim=25):
     x = keras.layers.LeakyReLU(alpha=0.3)(x)
     x = Dense(int((hidden_dim+7)/2), activation='linear')(x)
     x = keras.layers.LeakyReLU(alpha=0.3)(x)
-    main_output = Dense(7, activation='softmax')(x)
+    main_output = Dense(7, activation='sigmoid')(x)
     merge_model = Model(inputs=[seq_input1, seq_input2], outputs=[main_output])
     return merge_model
 
@@ -158,7 +159,7 @@ if __name__ == '__main__':
 
     seq_size = 2000
     emb_file = "../../../../data/vec5_CTC.txt"
-    n_epochs = 1
+    n_epochs = 10
 
 
     # ds_file, label_index, rst_file, use_emb, hiddem_dim
@@ -182,13 +183,17 @@ if __name__ == '__main__':
     for train, tbs, tes, tns in splits:
 
         # Training
+        t = time.time()
         merge_model = build_model(dim)
         adam = Adam(lr=learning_rate, amsgrad=True)
         rms = RMSprop(lr=learning_rate)
 
-        merge_model.compile(optimizer=adam, loss='categorical_crossentropy', metrics=['accuracy'])
+        merge_model.compile(optimizer=adam, loss='categorical_crossentropy')
         merge_model.fit([seq_tensor[seq_index1[train]], seq_tensor[seq_index2[train]]], class_labels[train], batch_size=batch_size, epochs=n_epochs)
         #result1 = merge_model.evaluate([seq_tensor1[test], seq_tensor2[test]], class_labels[test])
+        print('Training took ', (time.time() - t) / 60)
+
+        tf.keras.models.save_model(merge_model, f'../../../save_model/PIPR_{dataset}_{mode}_{batch_size}')
 
         # Testing
         results = []
@@ -197,10 +202,12 @@ if __name__ == '__main__':
             if len(test) == 0:
                 results.append(None)
                 continue
+            t = time.time()
             pred = merge_model.predict([seq_tensor[seq_index1[test]], seq_tensor[seq_index2[test]]])
 
             pred_bool = pred > 0.5
-
+            
+            print('Prediction took ', time.time() - t)
             metrics = Metrictor_PPI(pred_bool, class_labels[test])
             metrics.show_result()
 
@@ -218,6 +225,7 @@ if __name__ == '__main__':
             results.append(metrics.F1)
 
         with open(f'../../../../save_test_results/PIPR_{dataset}_{mode}', 'a') as f:
+            f.write(", ".join(['adam', mode, str(batch_size), str(learning_rate)]))
             f.write(", ".join(str(r) for r in results))
             f.write('\n')
 
