@@ -19,7 +19,7 @@ from tensorflow.python.keras.layers import Dense, Bidirectional, concatenate, mu
 from tensorflow.python.keras.optimizers import Adam,  RMSprop
 from tensorflow import keras
 
-from seq2tensor import s2t
+from PIPR.embeddings.seq2tensor import s2t
 from utils import Metrictor_PPI
 
 
