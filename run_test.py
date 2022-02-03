@@ -48,7 +48,7 @@ if __name__ == "__main__":
                 raise ValueError(f'{dataset} is not a valid dataset!')
 
             description = f"{dataset}_{split_mode}_{seed}"
-            index_path = f"new_train_valid_index_json/{description}.json"
+            index_path = f"train_valid_index_json/{description}.json"
             gnn_model = os.path.join("./save_model", f"gnn_{description}", "gnn_model_train.ckpt")
 
             run_func(

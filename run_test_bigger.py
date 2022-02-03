@@ -41,7 +41,7 @@ if __name__ == "__main__":
                 raise ValueError(f'{dataset} is not a valid dataset!')
 
             description = f"{dataset}_{split_mode}_{seed}"
-            index_path = f"new_train_valid_index_json/{description}.json"
+            index_path = f"train_valid_index_json/{description}.json"
             gnn_model = os.path.join(save_model_path, f"gnn_{description}", "gnn_model_valid_best.ckpt")
 
             bigger_ppi_path = "./data/9606.protein.actions.all_connected.txt"

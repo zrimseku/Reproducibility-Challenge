@@ -75,7 +75,7 @@ def make_splits(dataset, mode, seeds, seq_index1, seq_index2):
     splits = []
 
     for seed in seeds:
-        split_path = f'../../../../new_train_valid_index_json/{dataset}_{mode}_{seed}.json'
+        split_path = f'../../../../train_valid_index_json/{dataset}_{mode}_{seed}.json'
 
         with open(split_path, 'r') as f:
             split_dict = json.load(f)

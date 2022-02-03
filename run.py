@@ -66,7 +66,7 @@ if __name__ == "__main__":
 
         for seed in seeds:
             description = f"GCT_{dataset}_{split_mode}_{seed}"
-            train_valid_index_path = f"new_train_valid_index_json/GCT_{description}.json"
+            train_valid_index_path = f"train_valid_index_json/GCT_{description}.json"
 
             print('____________________________________________________________________________')
             print(f'____________________________{description}________________________________')
