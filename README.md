@@ -19,7 +19,7 @@ and secondly, we try to reproduce the results of the proposed model in compariso
 
 ### Methodology
 
-For the reproduction we used authors \href{https://github.com/lvguofeng/GNN_PPI}{code}, slightly changing the pipeline for automatization. We also used \href{https://github.com/muhaochen/seq_ppi}{PIPR code}, where we completely changed the pipeline, to be able to use it on the same datasets as GNN-PPI, but used their function for building the model. 
+For the reproduction we used authors [code](https://github.com/lvguofeng/GNN_PPI), slightly changing the pipeline for automatization. We also used [PIPR code](https://github.com/muhaochen/seq_ppi), where we completely changed the pipeline, to be able to use it on the same datasets as GNN-PPI, but used their function for building the model. 
 The experiments were run on Nvidia Titan X GPU, using around 250 GPU hours altogether.
 
 ### Results
