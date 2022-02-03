@@ -37,6 +37,7 @@ def get_session(gpu_fraction=0.9):
 
 
 def prepare_data(id2seq_file, emb_file):
+    seq_size = 2000
     seq2t = s2t(emb_file)
     pseq_dict = {}
     for line in tqdm(open(id2seq_file)):
@@ -45,6 +46,13 @@ def prepare_data(id2seq_file, emb_file):
             pseq_dict[line[0]] = line[1]
 
     dim = seq2t.dim
+
+    with open(f'../../../../data/{dataset}_ppi_with_labels.json', 'r') as f:
+        ppi_with_labels = json.load(f)
+
+    id2index = ppi_with_labels['names']
+    idx2name = {v: k for k, v in zip(id2index.keys(), id2index.values())}
+
     seq_tensor = np.array([seq2t.embed_normalized(pseq_dict[idx2name[i]], seq_size) for i in range(len(id2index))]).astype(dtype=np.float16)
 
     seq_index1 = []
@@ -100,6 +108,7 @@ def make_splits(dataset, mode, seeds, seq_index1, seq_index2):
 
 
 def build_model(dim, hidden_dim=25):
+    seq_size = 2000
     seq_input1 = Input(shape=(seq_size, dim), name='seq1')
     seq_input2 = Input(shape=(seq_size, dim), name='seq2')
     l1=Conv1D(hidden_dim, 3)
@@ -147,86 +156,80 @@ def build_model(dim, hidden_dim=25):
     return merge_model
 
 
-if __name__ == '__main__':
-    batch_size = 100
-    learning_rate = 0.001
-
-    dataset = 'SHS27k'
-
+def train_test(dataset, batch_size, n_epochs, learning_rate, seeds):
     # Note: if you use another PPI dataset, this needs to be changed to a corresponding dictionary file.
-    id2seq_file = f"../../../../data/protein.{dataset}.sequences.dictionary.tsv"
-    # id2seq_file = "../protein.sequences.dictionary.both.tsv"
+    if dataset == 'STRING':
+        id2seq_file = "../../../../data/protein.STRING_all_connected.sequences.dictionary.tsv"
+    else:
+        id2seq_file = f"../../../../data/protein.{dataset}.sequences.dictionary.tsv"
 
-    seq_size = 2000
     emb_file = "../../../../data/vec5_CTC.txt"
-    n_epochs = 10
-
-
-    # ds_file, label_index, rst_file, use_emb, hiddem_dim
-    ds_file = f"../../../../data/protein.actions.{dataset}.STRING.txt"
-    # ds_file = "../protein.actions.SHS27k.tsv"
-
-    tf.keras.backend.set_session(get_session())
-
-    with open(f'../../../../data/{dataset}_ppi_with_labels.json', 'r') as f:
-        ppi_with_labels = json.load(f)
-
-    id2index = ppi_with_labels['names']
-    idx2name = {v: k for k, v in zip(id2index.keys(), id2index.values())}
 
     seq_tensor, seq_index1, seq_index2, class_labels, dim = prepare_data(id2seq_file, emb_file)
 
-    mode = 'random'
-    seeds = [0, 42]
-    splits = make_splits(dataset, mode, seeds, seq_index1, seq_index2)
+    for mode in ['random', 'bfs', 'dfs']:
+        splits = make_splits(dataset, mode, seeds, seq_index1, seq_index2)
+        split_nr = 0
 
-    for train, tbs, tes, tns in splits:
+        for train, tbs, tes, tns in splits:
+            print(
+                f'_________________Training on {dataset}, {mode} mode with seed {seeds[split_nr]}, batch size {batch_size}_______________')
 
-        # Training
-        t = time.time()
-        merge_model = build_model(dim)
-        adam = Adam(lr=learning_rate, amsgrad=True)
-        rms = RMSprop(lr=learning_rate)
-
-        merge_model.compile(optimizer=adam, loss='categorical_crossentropy')
-        merge_model.fit([seq_tensor[seq_index1[train]], seq_tensor[seq_index2[train]]], class_labels[train], batch_size=batch_size, epochs=n_epochs)
-        #result1 = merge_model.evaluate([seq_tensor1[test], seq_tensor2[test]], class_labels[test])
-        print('Training took ', (time.time() - t) / 60)
-
-        tf.keras.models.save_model(merge_model, f'../../../save_model/PIPR_{dataset}_{mode}_{batch_size}')
-
-        # Testing
-        results = []
-        test_sets = [tbs + tes + tns, tbs, tes, tns]
-        for i, test in enumerate(test_sets):
-            if len(test) == 0:
-                results.append(None)
-                continue
+            # Training
             t = time.time()
-            pred = merge_model.predict([seq_tensor[seq_index1[test]], seq_tensor[seq_index2[test]]])
+            merge_model = build_model(dim)
+            adam = Adam(lr=learning_rate, amsgrad=True)
+            rms = RMSprop(lr=learning_rate)
 
-            pred_bool = pred > 0.5
-            
-            print('Prediction took ', time.time() - t)
-            metrics = Metrictor_PPI(pred_bool, class_labels[test])
-            metrics.show_result()
+            merge_model.compile(optimizer=adam, loss='categorical_crossentropy')
+            merge_model.fit([seq_tensor[seq_index1[train]], seq_tensor[seq_index2[train]]], class_labels[train],
+                            batch_size=batch_size, epochs=n_epochs)
 
-            # for i in range(len(class_labels[test])):
-            #     num_total += 1
-            #     if np.argmax(class_labels[test][i]) == np.argmax(pred[i]):
-            #         num_hit += 1
-            # accuracy = num_hit / num_total
-            # print(accuracy)
+            print('Training took ', (time.time() - t) / 60)
 
-            print(f"---------------- valid-test-{['all', 'bs', 'es', 'ns'][i]} result --------------------")
+            tf.keras.models.save_model(merge_model,
+                                       f'../../../save_model/PIPR_{dataset}_{mode}_{batch_size}_{seeds[split_nr]}')
+            split_nr += 1
 
-            print("Recall: {}, Precision: {}, F1: {}".format(metrics.Recall, metrics.Precision, metrics.F1))
+            # Testing
+            results = []
+            test_sets = [tbs + tes + tns, tbs, tes, tns]
+            for i, test in enumerate(test_sets):
+                if len(test) == 0:
+                    results.append(None)
+                    continue
+                t = time.time()
+                pred = merge_model.predict([seq_tensor[seq_index1[test]], seq_tensor[seq_index2[test]]])
 
-            results.append(metrics.F1)
+                pred_bool = pred > 0.5
 
-        with open(f'../../../../save_test_results/PIPR_{dataset}_{mode}', 'a') as f:
-            f.write(", ".join(['adam', mode, str(batch_size), str(learning_rate)]))
-            f.write(", ".join(str(r) for r in results))
-            f.write('\n')
+                print('Prediction took ', time.time() - t)
+                metrics = Metrictor_PPI(pred_bool, class_labels[test])
+                metrics.show_result()
+
+                print(f"---------------- valid-test-{['all', 'bs', 'es', 'ns'][i]} result --------------------")
+
+                print("Recall: {}, Precision: {}, F1: {}".format(metrics.Recall, metrics.Precision, metrics.F1))
+
+                results.append(metrics.F1)
+
+            with open(f'../../../../save_test_results/PIPR_{dataset}_{mode}', 'a') as f:
+                f.write(", ".join(['adam', mode, str(batch_size), str(learning_rate)]))
+                f.write(': ')
+                f.write(", ".join(str(r) for r in results))
+                f.write('\n')
+
+
+if __name__ == '__main__':
+    # set training parameters
+    batch_size = 1024
+    learning_rate = 0.001
+    n_epochs = 100
+    dataset = 'STRING'
+    seeds = [0]  # , 42, 100, 600, 2000]
+
+    tf.keras.backend.set_session(get_session())
+    train_test(dataset, batch_size, n_epochs, learning_rate, seeds)
+
 
 
