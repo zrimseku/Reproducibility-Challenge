@@ -45,6 +45,8 @@ def test(model, graph, test_mask, device):
 
     valid_steps = math.ceil(len(test_mask) / batch_size)
 
+    t  = time.time()
+
     for step in tqdm(range(valid_steps)):
         if step == valid_steps-1:
             valid_edge_id = test_mask[step*batch_size:]
@@ -63,6 +65,8 @@ def test(model, graph, test_mask, device):
 
     valid_pre_result_list = torch.cat(valid_pre_result_list, dim=0)
     valid_label_list = torch.cat(valid_label_list, dim=0)
+
+    print('Testing took ', time.time() - t)
 
     metrics = Metrictor_PPI(valid_pre_result_list, valid_label_list)
 
@@ -165,17 +169,17 @@ def main():
     else:
         print("---------------- valid-test-all result --------------------")
         f1 = test(model, graph, graph.val_mask, device)
-        print("---------------- valid-test1 result --------------------")
+        print("---------------- valid-test-bs result --------------------")
         if len(graph.test1_mask) > 0:
             f11 = test(model, graph, graph.test1_mask, device)
         else:
             f11 = None
-        print("---------------- valid-test2 result --------------------")
+        print("---------------- valid-test-es result --------------------")
         if len(graph.test2_mask) > 0:
             f12 = test(model, graph, graph.test2_mask, device)
         else:
             f12 = None
-        print("---------------- valid-test3 result --------------------")
+        print("---------------- valid-test-ns result --------------------")
         if len(graph.test3_mask) > 0:
             f13 = test(model, graph, graph.test3_mask, device)
         else:
@@ -183,9 +187,10 @@ def main():
 
         dataset, method, seed = args.description.split('_')
         with open(f'./save_test_results/{dataset}_{method}', 'a') as f:
-            f.write(", ".join([str(f1), str(f11), str(f12), str(f13)]))
+            f.write(", ".join([str(f1), str(f11), str(f12), str(f13), str(len(graph.test1_mask)), str(len(graph.test2_mask)), str(len(graph.test3_mask))]))
             f.write('\n')
 
 
 if __name__ == "__main__":
     main()
+
